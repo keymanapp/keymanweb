@@ -29,6 +29,11 @@ namespace com.keyman.osk {
       const gs=gDiv.style;
       gDiv.className='kmw-key-layer';
 
+      var nRows=layer['row'].length;
+      if(nRows > 4 && vkbd.device.formFactor == 'phone') {
+        gDiv.className = gDiv.className + ' kmw-5rows';
+      }
+
       // Set font for layer if defined in layout
       if('font' in layout) {
         gs.fontFamily=layout['font'];
@@ -85,13 +90,16 @@ namespace com.keyman.osk {
     public refreshLayout(vkbd: VisualKeyboard, paddedHeight: number, trueHeight: number) {
       // Check the heights of each row, in case different layers have different row counts.
       let nRows = this.rows.length;
-      this.element.style.height=(paddedHeight)+'px';
-
       let rowHeight = Math.floor(trueHeight/(nRows == 0 ? 1 : nRows));
 
-      if(vkbd.device.OS == 'Android' && 'devicePixelRatio' in window) {
-        this.element.style.height = this.element.style.maxHeight = paddedHeight + 'px';
-        rowHeight /= window.devicePixelRatio;
+      if(vkbd.usesFixedHeightScaling) {
+        this.element.style.height=(paddedHeight)+'px';
+
+
+        if(vkbd.device.OS == 'Android' && 'devicePixelRatio' in window) {
+          this.element.style.height = this.element.style.maxHeight = paddedHeight + 'px';
+          rowHeight /= window.devicePixelRatio;
+        }
       }
 
       // Sets the layers to the correct height
@@ -100,8 +108,10 @@ namespace com.keyman.osk {
       for(let nRow=0; nRow<nRows; nRow++) {
         let bottom = (nRows-nRow-1)*rowHeight+1;
 
-        // Calculate the exact vertical coordinate of the row's center.
-        this.spec.row[nRow].proportionalY = ((paddedHeight - bottom) - rowHeight/2) / paddedHeight;
+        if(vkbd.usesFixedHeightScaling) {
+          // Calculate the exact vertical coordinate of the row's center.
+          this.spec.row[nRow].proportionalY = ((paddedHeight - bottom) - rowHeight/2) / paddedHeight;
+        }
 
         const oskRow = this.rows[nRow];
         oskRow.refreshLayout(vkbd, rowHeight, bottom, rowPad);
